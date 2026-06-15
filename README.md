@@ -48,7 +48,7 @@ GRANT ALL PRIVILEGES ON mechat.* TO 'mechat'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-最后在根目录执行以下命令：
+最后在项目根目录执行以下命令：
 
 ```bash
 bash deploy-baremetal.sh
