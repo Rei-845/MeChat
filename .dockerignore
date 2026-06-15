@@ -1,0 +1,12 @@
+.git
+docs/
+.claude
+frontend/node_modules
+frontend/dist
+frontend/.vite
+backend/bin/
+backend/mechat-server
+backend/uploads/
+deploy/*.tar.gz
+.DS_Store
+*.swp

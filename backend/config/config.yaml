@@ -1,0 +1,44 @@
+server:
+  addr: ":8080"
+  mode: "debug"             
+  allowed_origins: "*"      
+
+mysql:
+  dsn: "mechat:mechat123@tcp(localhost:3306)/mechat?charset=utf8mb4&parseTime=True&loc=Local"
+  max_open_conns: 100      
+  max_idle_conns: 20
+  conn_max_lifetime: 1h
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+  pool_size: 50
+
+rabbitmq:
+  url: "amqp://mechat:mechat123@localhost:5672/"
+
+jwt:
+  secret: "change-this-to-a-strong-secret-in-production"
+  expire_time: 720h  
+
+oss:
+  endpoint: ""
+  access_key_id: ""
+  access_key_secret: ""
+  bucket: ""
+  domain: ""  
+
+email:
+  host: ""
+  port: 
+  username: ""
+  password: ""
+  from: ""
+
+ai:
+  provider: ""
+  model: ""
+  api_key: ""
+  base_url: "" 
+  timeout: 30s

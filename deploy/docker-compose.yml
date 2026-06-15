@@ -1,0 +1,107 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mechat_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mechat123
+      MYSQL_DATABASE: mechat
+      MYSQL_CHARSET: utf8mb4
+    ports:
+      - "127.0.0.1:3306:3306"  
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmechat123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: mechat_redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: mechat_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: mechat
+      RABBITMQ_DEFAULT_PASS: mechat123
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"  
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 30s
+      retries: 10
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    image: mechat-server:latest
+    container_name: mechat_server
+    environment:
+      - SERVER_MODE=${SERVER_MODE:-release}
+      - MYSQL_DSN=root:mechat123@tcp(mysql:3306)/mechat?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+      - RABBITMQ_URL=amqp://mechat:mechat123@rabbitmq:5672/
+      - JWT_SECRET=${JWT_SECRET:-mechat-change-this-secret-in-production}
+      - OSS_ACCESS_KEY=${OSS_ACCESS_KEY:-}
+      - OSS_SECRET_KEY=${OSS_SECRET_KEY:-}
+      - OSS_BUCKET=${OSS_BUCKET:-mechat-bucket}
+      - OSS_ENDPOINT=${OSS_ENDPOINT:-}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_BASE_URL=${AI_BASE_URL:-https://api.deepseek.com/v1}
+      - AI_MODEL=${AI_MODEL:-deepseek-chat}
+      - SMTP_HOST=${SMTP_HOST:-smtp.qq.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-*}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"  
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    image: mechat-frontend:latest
+    container_name: mechat_nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:

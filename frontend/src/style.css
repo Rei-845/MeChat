@@ -1,0 +1,272 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════
+   语义化双主题 Design Tokens（Telegram 风）
+   颜色全部以「R G B」通道写入 CSS 变量，配合 tailwind 的
+   rgb(var(--x) / <alpha-value>) 让 text-ink/60 这类透明度修饰符可用。
+   默认 :root = 浅色；html.dark = Telegram 夜间。
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* 浅色（Telegram Light） */
+  --app-bg: 240 242 245;       /* 聊天区底色 #F0F2F5 */
+  --surface: 255 255 255;      /* 面板/侧栏 #FFFFFF */
+  --surface-2: 244 246 249;    /* 悬浮态 #F4F6F9 */
+  --ink: 17 27 33;             /* 主文字 #111B21 */
+  --ink-2: 101 119 134;        /* 次文字 #657786 */
+  --ink-3: 150 162 173;        /* 提示文字 #96A2AD */
+  --border: 230 234 238;       /* 分割线 #E6EAEE */
+  --border-strong: 214 221 228;
+  --primary: 51 144 236;       /* 品牌主蓝 #3390EC */
+  --primary-light: 51 144 236; /* 浅色强调统一为品牌蓝 #3390EC */
+  --primary-dark: 36 110 185;
+  --accent: 60 188 93;         /* 在线/成功 绿 #3CBC5D */
+  --danger: 235 83 83;         /* #EB5353 */
+  --warning: 240 158 11;
+  --online: 60 188 93;
+  --bubble-out: 238 255 222;   /* 我的气泡（浅绿）#EEFFDE */
+  --bubble-out-ink: 17 27 33;
+  --bubble-in: 255 255 255;    /* 对方气泡（白）*/
+  --bubble-in-ink: 17 27 33;
+
+  --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-out: cubic-bezier(0, 0, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-normal: 250ms;
+  --dur-slow: 400ms;
+}
+
+html.dark {
+  /* 深色（Telegram Night） */
+  --app-bg: 14 22 33;          /* #0E1621 */
+  --surface: 23 33 43;         /* #17212B */
+  --surface-2: 32 43 54;       /* #202B36 */
+  --ink: 255 255 255;
+  --ink-2: 127 142 158;        /* #7F8E9E */
+  --ink-3: 92 107 122;         /* #5C6B7A */
+  --border: 38 49 60;          /* #26313C */
+  --border-strong: 51 64 77;
+  --primary: 51 144 236;       /* 蓝保持 #3390EC */
+  --primary-light: 106 179 243;/* #6AB3F3 */
+  --primary-dark: 41 128 222;
+  --accent: 64 196 99;
+  --danger: 235 83 83;
+  --warning: 240 158 11;
+  --online: 64 196 99;
+  --bubble-out: 43 82 120;     /* #2B5278 */
+  --bubble-out-ink: 255 255 255;
+  --bubble-in: 24 37 51;       /* #182533 */
+  --bubble-in-ink: 233 237 240;
+}
+
+/* ── Base ──────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #app {
+  height: 100%;
+  min-height: -webkit-fill-available;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: rgb(var(--app-bg));
+  color: rgb(var(--ink));
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(var(--ink) / 0.18); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--ink) / 0.28); }
+
+/* ── 面板表面（原 glass，改为 Telegram 实色卡片 + 发丝边 + 柔阴影）── */
+@layer components {
+  .glass {
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--border));
+    box-shadow: 0 1px 2px rgb(16 28 40 / 0.04);
+  }
+  .glass-strong {
+    background: rgb(var(--surface));
+    border: 1px solid rgb(var(--border));
+    box-shadow: 0 12px 40px rgb(16 28 40 / 0.16);
+  }
+  .glow-primary { box-shadow: 0 0 0 3px rgb(var(--primary) / 0.16); }
+
+  /* 可交互表面 */
+  .surface-interactive {
+    @apply transition-all cursor-pointer;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--easing);
+  }
+  .surface-interactive:hover { background: rgb(var(--surface-2)); }
+  .surface-interactive:active { background: rgb(var(--ink) / 0.06); transform: scale(0.98); }
+
+  /* 侧栏导航项 */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium
+           surface-interactive;
+    color: rgb(var(--ink-2));
+  }
+  .nav-item.active {
+    color: rgb(var(--primary));
+    background: rgb(var(--primary) / 0.12);
+  }
+  .nav-item.active svg { color: rgb(var(--primary)); }
+  .nav-item:hover:not(.active) { color: rgb(var(--ink)); }
+
+  /* 输入框 */
+  .mc-input {
+    @apply w-full px-4 py-3 rounded-md text-sm outline-none transition-all;
+    color: rgb(var(--ink));
+    background: rgb(var(--surface-2));
+    border: 1px solid rgb(var(--border));
+    transition-duration: var(--dur-fast);
+  }
+  .mc-input::placeholder { color: rgb(var(--ink-3)); }
+  .mc-input:focus {
+    border-color: rgb(var(--primary) / 0.7);
+    background: rgb(var(--surface));
+    box-shadow: 0 0 0 3px rgb(var(--primary) / 0.12);
+  }
+
+  /* 主按钮：Telegram 实色蓝 */
+  .btn-primary {
+    @apply px-6 py-3 rounded-md text-sm font-semibold
+           transition-all cursor-pointer select-none;
+    color: #fff;
+    background: rgb(var(--primary));
+    box-shadow: 0 1px 2px rgb(var(--primary) / 0.3);
+    transition-duration: var(--dur-fast);
+  }
+  .btn-primary:hover { background: rgb(var(--primary-dark)); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    @apply px-4 py-2 rounded-md text-sm font-medium surface-interactive;
+    color: rgb(var(--ink-2));
+  }
+  .btn-ghost:hover { color: rgb(var(--ink)); }
+}
+
+/* ── 消息气泡 ──────────────────────────────────────────────
+   自己=浅绿（夜间为靛蓝）；对方=白（夜间为深灰）；非对称圆角模拟尾巴。 */
+.msg-bubble-self {
+  background: rgb(var(--bubble-out));
+  color: rgb(var(--bubble-out-ink));
+  border-radius: 12px 12px 4px 12px;
+  box-shadow: 0 1px 1px rgb(16 28 40 / 0.08);
+}
+.msg-bubble-other {
+  background: rgb(var(--bubble-in));
+  color: rgb(var(--bubble-in-ink));
+  border-radius: 12px 12px 12px 4px;
+  box-shadow: 0 1px 1px rgb(16 28 40 / 0.08);
+}
+
+/* ── Ambient blob（AuthView 装饰）── */
+.blob {
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: blob 12s ease-in-out infinite;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Safe-area ─────────────────────────────────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.h-screen { height: 100dvh; }
+
+/* ── Toast ─────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  top: 20px; right: 20px;
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+/* ── 聊天区花纹底（Telegram doodle）──────────────────────
+   浅色 = 浅底 + 极淡深色描边；夜间由 html.dark 覆盖为深底 + 淡白描边。 */
+.app-bg {
+  background-color: rgb(var(--app-bg));
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%233390EC%27%20stroke-opacity%3D%270.13%27%20stroke-width%3D%271.5%27%3E%3Ccircle%20cx%3D%2720%27%20cy%3D%2724%27%20r%3D%277%27%2F%3E%3Cpath%20d%3D%27M70%2016v14M63%2023h14%27%2F%3E%3Ccircle%20cx%3D%27100%27%20cy%3D%2740%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M30%2070v12M24%2076h12%27%2F%3E%3Ccircle%20cx%3D%2788%27%20cy%3D%2786%27%20r%3D%278%27%2F%3E%3Cpath%20d%3D%27M104%20100v12M98%20106h12%27%2F%3E%3Ccircle%20cx%3D%2752%27%20cy%3D%27104%27%20r%3D%274%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  background-repeat: repeat;
+  background-size: 120px 120px;
+}
+html.dark .app-bg {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%233390EC%27%20stroke-opacity%3D%270.13%27%20stroke-width%3D%271.5%27%3E%3Ccircle%20cx%3D%2720%27%20cy%3D%2724%27%20r%3D%277%27%2F%3E%3Cpath%20d%3D%27M70%2016v14M63%2023h14%27%2F%3E%3Ccircle%20cx%3D%27100%27%20cy%3D%2740%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M30%2070v12M24%2076h12%27%2F%3E%3Ccircle%20cx%3D%2788%27%20cy%3D%2786%27%20r%3D%278%27%2F%3E%3Cpath%20d%3D%27M104%20100v12M98%20106h12%27%2F%3E%3Ccircle%20cx%3D%2752%27%20cy%3D%27104%27%20r%3D%274%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* ── Markdown（全局，多组件共用；用 token 适配双主题）──── */
+.md-body p { margin: 0 0 0.5em; }
+.md-body p:last-child { margin-bottom: 0; }
+.md-body h1, .md-body h2, .md-body h3, .md-body h4 { font-weight: 700; margin: 0.6em 0 0.35em; line-height: 1.3; }
+.md-body .md-h1 { font-size: 1.25em; }
+.md-body .md-h2 { font-size: 1.15em; }
+.md-body .md-h3 { font-size: 1.05em; }
+.md-body ul, .md-body ol { margin: 0.3em 0 0.5em; padding-left: 1.4em; }
+.md-body li { margin: 0.15em 0; }
+.md-body ul { list-style: disc; }
+.md-body ol { list-style: decimal; }
+.md-body a { color: rgb(var(--primary)); text-decoration: underline; cursor: pointer; }
+.md-body strong { font-weight: 700; color: rgb(var(--ink)); }
+.md-body em { font-style: italic; }
+.md-body del { opacity: 0.6; }
+.md-body .md-code {
+  background: rgb(var(--ink) / 0.08);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+}
+.md-body .md-pre {
+  background: rgb(var(--ink) / 0.06);
+  border: 1px solid rgb(var(--border));
+  border-radius: 10px;
+  padding: 0.7em 0.9em;
+  margin: 0.5em 0;
+  overflow-x: auto;
+}
+.md-body .md-pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  white-space: pre;
+  background: none;
+  padding: 0;
+}
+.md-body .md-quote {
+  border-left: 3px solid rgb(var(--primary) / 0.5);
+  padding: 0.1em 0 0.1em 0.8em;
+  margin: 0.4em 0;
+  color: rgb(var(--ink-2));
+}
+.md-body .md-hr { border: none; border-top: 1px solid rgb(var(--border)); margin: 0.8em 0; }
+.md-body .md-table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.92em;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.md-body .md-table th, .md-body .md-table td {
+  border: 1px solid rgb(var(--border));
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+.md-body .md-table th { background: rgb(var(--ink) / 0.05); font-weight: 600; }
+.md-body .md-table tr:nth-child(even) td { background: rgb(var(--ink) / 0.02); }
+.md-body .md-img { max-width: 100%; border-radius: 8px; margin: 0.4em 0; display: block; }
+.md-body li.md-task { list-style: none; margin-left: -1.2em; }
+.md-body li.md-task input[type="checkbox"] { margin-right: 0.4em; vertical-align: -0.1em; accent-color: rgb(var(--primary)); }
